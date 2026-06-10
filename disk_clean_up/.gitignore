@@ -1,0 +1,28 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+
+# Environment variables
+.env
+
+
+# Logs
+logs/
+
+
+# Generated reports
+reports/
+
+# Runtime data
+data/classification_cache.json
+logs/deletion_log.json
+
+# Files created during testing
+deleted_files/
+
+# Large monitored files (optional)
+monitored_folder/
+
+
