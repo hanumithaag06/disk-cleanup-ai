@@ -345,7 +345,20 @@ class ChooseModeView(View):
         )
 
         files = await async_scan(str(MONITORED_FOLDER))
+        pdf_buffer = generate_pdf_report(
+            files,
+            "Classification Only",
+            0,
+            0,
+            datetime.now(UTC)
+        )
 
+        await interaction.channel.send(
+            file=discord.File(
+                fp=pdf_buffer,
+                filename="classification_report.pdf"
+            )
+        )
         embed, view = build_results_embed(files)
         await interaction.channel.send(embed=embed, view=view)
 
@@ -380,7 +393,20 @@ class ChooseModeView(View):
             )
 
             files = await async_scan(str(MONITORED_FOLDER), max_age_days=days)
+            pdf_buffer = generate_pdf_report(
+                files,
+                "Classification Only",
+                0,
+                0,
+                datetime.now(UTC)
+            )
 
+            await interaction.channel.send(
+                file=discord.File(
+                    fp=pdf_buffer,
+                    filename="classification_report.pdf"
+                )
+            )
             embed, view = build_results_embed(files, threshold=days)
             await interaction.channel.send(embed=embed, view=view)
 
@@ -431,7 +457,20 @@ class ReviewView(View):
 
         await lock_view(self, interaction)
         recovered_kb = delete_files(to_delete)
+        pdf_buffer = generate_pdf_report(
+            self.files,
+            "Moved to Recycle Bin",
+            len(to_delete),
+            recovered_kb,
+            datetime.now(UTC)
+        )
 
+        await interaction.channel.send(
+            file=discord.File(
+                fp=pdf_buffer,
+                filename="deletion_report.pdf"
+            )
+        )
         embed = discord.Embed(
             title="🗑️ Files moved to recycle bin",
             description=(
@@ -791,13 +830,13 @@ async def create_test_data(
             ephemeral=True
         )
         return
-
+    await interaction.response.defer()
     generate_demo_files(
         folder=str(MONITORED_FOLDER),
         files_per_run=count
     )
 
-    await interaction.response.send_message(
+    await interaction.followup.send(
         f"✅ Generated {count} demo files."
     )
 @tree.command(
@@ -807,6 +846,7 @@ async def create_test_data(
 async def list_files(
     interaction: discord.Interaction
 ):
+    await interaction.response.defer()
     if not is_authorized(interaction):
         await interaction.response.send_message(
             "Unauthorized.",
@@ -826,7 +866,7 @@ async def list_files(
 
     lines = []
 
-    for f in files[:50]:
+    for f in files:
 
         lines.append(
             f"📄 {f['name']} | "
@@ -834,9 +874,31 @@ async def list_files(
             f"{f['days_since_last_access']} days"
         )
 
-    await interaction.response.send_message(
-        "\n".join(lines)
-    )
+    chunks = []
+    current = ""
+
+    for line in lines:
+
+        if len(current) + len(line) + 1 > 1900:
+
+            chunks.append(current)
+
+            current = line
+
+        else:
+
+            if current:
+                current += "\n"
+
+            current += line
+
+    if current:
+
+        chunks.append(current)
+
+    for chunk in chunks:
+
+        await interaction.followup.send(chunk)
 @tree.command(
     name="list_files_rb",
     description="List recycle bin files"
@@ -844,6 +906,7 @@ async def list_files(
 async def list_files_rb(
     interaction: discord.Interaction
 ):
+    await interaction.response.defer()
     if not is_authorized(interaction):
         await interaction.response.send_message(
             "Unauthorized.",
@@ -876,9 +939,32 @@ async def list_files_rb(
             f"{size_mb} MB"
         )
 
-    await interaction.response.send_message(
-        "\n".join(lines)
-    )
+
+    chunks = []
+    current = ""
+
+    for line in lines:
+
+        if len(current) + len(line) + 1 > 1900:
+
+            chunks.append(current)
+
+            current = line
+
+        else:
+
+            if current:
+                current += "\n"
+
+            current += line
+
+    if current:
+
+        chunks.append(current)
+
+    for chunk in chunks:
+
+        await interaction.followup.send(chunk)
 @tree.command(
     name="help",
     description="Show commands"
