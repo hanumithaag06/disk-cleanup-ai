@@ -87,6 +87,9 @@ def classify_files(files, threshold_days=180):
         files_for_llm.append(file)
 
     if not files_for_llm:
+        set_cached_threshold(
+            threshold_days
+        )
 
         return final_results
 
@@ -460,9 +463,6 @@ def classify_files(files, threshold_days=180):
             print(raw_response)
 
             continue
-    set_cached_threshold(
-        threshold_days
-    )
     final_results.extend(
         all_results
     )
