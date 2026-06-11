@@ -4,10 +4,11 @@ import asyncio
 import logging
 import os
 import sys
+from pathlib import Path
 import io
 from datetime import datetime, UTC
 from functools import partial
-
+from demo_files_creator import generate_demo_files
 # ── Step 1: add src/ to path so plain imports resolve ─────
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -769,7 +770,155 @@ async def start(interaction: discord.Interaction):
     await interaction.response.send_message("✅ Starting…", ephemeral=True)
     await post_start_embed(interaction.channel)
 
+@tree.command(
+    name="create_test_data",
+    description="Generate test files"
+)
+async def create_test_data(
+    interaction: discord.Interaction,
+    count: int
+):
+    if not is_authorized(interaction):
+        await interaction.response.send_message(
+            "Unauthorized.",
+            ephemeral=True
+        )
+        return
 
+    if count < 1 or count > 500:
+        await interaction.response.send_message(
+            "Count must be between 1 and 500.",
+            ephemeral=True
+        )
+        return
+
+    generate_demo_files(
+        folder=str(MONITORED_FOLDER),
+        files_per_run=count
+    )
+
+    await interaction.response.send_message(
+        f"✅ Generated {count} demo files."
+    )
+@tree.command(
+    name="list_files",
+    description="List files in monitored folder"
+)
+async def list_files(
+    interaction: discord.Interaction
+):
+    if not is_authorized(interaction):
+        await interaction.response.send_message(
+            "Unauthorized.",
+            ephemeral=True
+        )
+        return
+
+    files = scan_folder(
+        str(MONITORED_FOLDER)
+    )
+
+    if not files:
+        await interaction.response.send_message(
+            "No files found."
+        )
+        return
+
+    lines = []
+
+    for f in files[:50]:
+
+        lines.append(
+            f"📄 {f['name']} | "
+            f"{f['size_mb']} MB | "
+            f"{f['days_since_last_access']} days"
+        )
+
+    await interaction.response.send_message(
+        "\n".join(lines)
+    )
+@tree.command(
+    name="list_files_rb",
+    description="List recycle bin files"
+)
+async def list_files_rb(
+    interaction: discord.Interaction
+):
+    if not is_authorized(interaction):
+        await interaction.response.send_message(
+            "Unauthorized.",
+            ephemeral=True
+        )
+        return
+
+    files = list(
+        Path(DELETED_FOLDER).glob("*")
+    )
+
+    if not files:
+        await interaction.response.send_message(
+            "Recycle bin empty."
+        )
+        return
+
+    lines = []
+
+    for file in files[:50]:
+
+        size_mb = round(
+            file.stat().st_size /
+            (1024 * 1024),
+            2
+        )
+
+        lines.append(
+            f"🗑️ {file.name} | "
+            f"{size_mb} MB"
+        )
+
+    await interaction.response.send_message(
+        "\n".join(lines)
+    )
+@tree.command(
+    name="help",
+    description="Show commands"
+)
+async def help_cmd(
+    interaction: discord.Interaction
+):
+
+    embed = discord.Embed(
+        title="Disk Cleanup Commands",
+        color=discord.Color.blurple()
+    )
+
+    embed.add_field(
+        name="/start",
+        value="Start cleanup workflow",
+        inline=False
+    )
+
+    embed.add_field(
+        name="/create_test_data count",
+        value="Generate demo files",
+        inline=False
+    )
+
+    embed.add_field(
+        name="/list_files",
+        value="List sandbox files",
+        inline=False
+    )
+
+    embed.add_field(
+        name="/list_files_rb",
+        value="List recycle bin files",
+        inline=False
+    )
+
+    await interaction.response.send_message(
+        embed=embed
+    )
 # ── Bot startup ───────────────────────────────────────────
 @client.event
 async def on_ready():
