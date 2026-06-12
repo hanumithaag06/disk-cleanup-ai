@@ -2,9 +2,9 @@
 
 <br/>
 
-# 💾 Disk Cleanup AI
+# 💾 Disk Cleanup Recommender
 
-### AI-powered disk management with human approval — running entirely on your machine.
+### A Human-in-the-Loop AI System for Smart Disk Management — running entirely on your machine.
 
 <br/>
 
