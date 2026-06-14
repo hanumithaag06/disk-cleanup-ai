@@ -39,6 +39,30 @@ No cloud. No data leaving your machine. No files touched without your click.
 
 ---
 
+## Why Human-in-the-Loop?
+
+Unlike traditional cleanup tools:
+
+❌ No automatic deletion
+
+❌ No background file removal
+
+❌ No AI-controlled file destruction
+
+✅ Every recommendation requires user approval
+
+✅ Files move to `deleted_files/` first
+
+✅ Permanent deletion requires a second confirmation
+
+✅ Users remain in complete control of their files
+
+The AI acts only as an advisor. Every file operation requires explicit user approval through the Discord workflow, ensuring safety, transparency, and full user control.
+
+<br/>
+
+---
+
 ## Features
 
 <br/>
